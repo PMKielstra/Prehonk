@@ -79,7 +79,7 @@
         <p>Want to support your local union?</p>
         <p>Have to cross a picket line?</p>
         <p>Can't honk for whatever reason?</p>
-        <button id="starter">Prehonk!</button>
+        <button id="starterbutton">Prehonk!</button>
     </div>
     <div id="main">
     <div class="message"><p id="message"></p></div>
@@ -107,7 +107,7 @@
             document.getElementById("main").style.display = "block";
         }
 
-        document.getElementById("starter").onclick = start;
+        document.getElementById("starterbutton").onclick = start;
 
         function stopAudio(){
             source.stop(0); // this destroys the buffer source
