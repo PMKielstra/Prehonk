@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prehonk - Support Your Local Union!</title>
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+        #honker {
+            width: 60vw;
+            height: 60vw;
+            margin-left: auto;
+            margin-right: auto;
+            padding-top: 5vw;
+            padding-bottom: 5vw;
+            cursor: pointer;
+        }
+        .form, .message {
+            width: 80vw;
+            margin-left: auto;
+            margin-right: auto;
+            padding-top: 5vw;
+            text-align: center;
+        }
+        #message {
+            margin: 0;
+            padding: 0;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .form * {
+            display: block;
+            width: 100%;
+            margin-bottom: 5vw;
+            color: black;
+        }
+    </style>
+    <script type="text/javascript" src="libs/progressbar.min.js" ></script>
+</head>
+<body>
+    <div class="message"><p id="message"></p></div>
+    <div class="form">
+        <input type="text" placeholder="Name" id="name" />
+    </div>
+    <div id="honker"></div>
+    <script type="text/javascript">
+        const aCtx = new AudioContext();
+        let source = aCtx.createBufferSource();
+        let buf;
+        fetch('assets/car.wav')
+        .then(resp => resp.arrayBuffer())
+        .then(buf => aCtx.decodeAudioData(buf))
+        .then(decoded => {
+            source.buffer = buf = decoded;
+            source.loop = true;
+            source.connect(aCtx.destination);
+        });
+
+        function stopAudio(){
+            source.stop(0); // this destroys the buffer source
+            source = aCtx.createBufferSource(); // so we need to create a new one
+            source.buffer = buf;
+            source.loop = true;
+            source.connect(aCtx.destination);
+        }
+
+        var honkdiv = document.getElementById("honker");
+        var honker = new ProgressBar.Circle(honkdiv, {color: "#ff0000", trailColor: "#eee", trailWidth: 1});
+        const honkString = "Honk!";
+        honker.setText(honkString);
+        
+        const fairPay = "Honk for fair pay!";
+        const goodToGo = "You&rsquo;re good to go!";
+        var msg = document.getElementById("message");
+        msg.innerHTML = fairPay;
+
+        var start = 0;
+        var total = 0.5249886621315193 * 8000; // Horrible hack: the decimal is the measured length of car.wav in seconds, so this runs for about four seconds.
+        var honking = true;
+        function animateHonk(timestamp){
+            if (start == 0) start = timestamp;
+            if (!honking) return;
+            if (timestamp - start <= total) {
+                honker.set((timestamp - start) / total);
+                window.requestAnimationFrame(animateHonk);
+            } else {
+                stopAudio();
+                decaying = true;
+                goodStart = 0;
+                msg.innerHTML = goodToGo;
+                honker.set(1);
+                honkdiv.style.cursor = "initial";
+                document.getElementById("name").disabled = true;
+                window.requestAnimationFrame(animateDecay);
+            }
+        }
+
+        function twodigit(x) {
+            if (x < 10) {
+                return "0" + x;
+            } else {
+                return x;
+            }
+        }
+
+        const MS_PER_HOUR = 1000 * 60 * 60;
+        const MS_PER_MIN = 1000 * 60;
+        const MS_PER_SEC = 1000;
+        function printDuration(ms) {
+            var hour = Math.floor(ms / MS_PER_HOUR);
+            ms = ms - hour * MS_PER_HOUR;
+            var minute = Math.floor(ms / MS_PER_MIN);
+            ms = ms - minute * MS_PER_MIN;
+            var second = Math.floor(ms / MS_PER_SEC);
+            return twodigit(hour) + ":" + twodigit(minute) + ":" + twodigit(second);
+        }
+
+        var goodDuration = 1 * 60 * 60 * 1000;
+        var goodStart = 0
+        var decaying = false;
+        function animateDecay(timestamp){
+            if (goodStart == 0) goodStart = timestamp;
+            if (!decaying) return;
+            if (timestamp - goodStart <= goodDuration) {
+                honker.set(1 - (timestamp - goodStart) / goodDuration);
+                honker.setText(printDuration(goodDuration - (timestamp - goodStart)));
+                window.requestAnimationFrame(animateDecay);
+            } else {
+                decaying = false;
+                honker.setText(honkString);
+                msg.innerHTML = fairPay;
+                honkdiv.style.cursor = "pointer";
+                document.getElementById("name").disabled = false;
+                honker.set(0);
+            }
+        }
+
+        honkdiv.onmousedown = function(e){
+            e.preventDefault();
+            if (!decaying){
+                start = 0;
+                honking = true;
+                window.requestAnimationFrame(animateHonk);
+                source.start(0);
+            }
+        }
+
+        honkdiv.onmouseup = function(e){
+            e.preventDefault();
+            if (!decaying){
+                honking = false;
+                start = 0;
+                honker.animate(0);
+                stopAudio();
+            }
+        }
+
+
+    </script>
+</body>
+</html>
