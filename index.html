@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Prehonk - Support Your Local Union!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style type="text/css">
         html, body {
             margin: 0;
@@ -137,7 +138,8 @@
             }
         }
 
-        honkdiv.onmousedown = function(e){
+        honkdiv.onpointerdown = function(e){
+            honkdiv.setPointerCapture(e.pointerId);
             e.preventDefault();
             if (!decaying){
                 start = 0;
@@ -147,7 +149,7 @@
             }
         }
 
-        honkdiv.onmouseup = function(e){
+        honkdiv.onpointerup = function(e){
             e.preventDefault();
             if (!decaying){
                 honking = false;
